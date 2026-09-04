@@ -1,0 +1,39 @@
+#!/bin/bash
+echo "======================================="
+echo " Top Disk Usage Report"
+echo "======================================="
+echo
+echo "Top 10 Directories:"
+du -xhd1 / 2>/dev/null | sort -hr | head -10
+echo
+echo "Top 10 Files:"
+find / -xdev -type f -printf '%s %p\n' 2>/dev/null \
+| sort -nr \
+| head -10 \
+| awk '{ printf "%.2f GB\t%s\n", $1/1024/1024/1024, $2 }'
+echo
+echo "======================================="
+echo " File Deletion"
+echo "======================================="
+echo
+read -rp "Enter full file path to delete (or press Enter to skip): " FILE
+if [ -z "$FILE" ]; then
+echo "No file selected."
+exit 0
+fi
+if [ ! -f "$FILE" ]; then
+echo "File not found: $FILE"
+exit 1
+fi
+ls -lh "$FILE"
+echo
+read -rp "Delete this file? (y/n): " CONFIRM
+case "$CONFIRM" in
+y|Y)
+rm -f "$FILE"
+echo "Deleted: $FILE"
+;;
+*)
+echo "Cancelled."
+;;
+esac​‌
