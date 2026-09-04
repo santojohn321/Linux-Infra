@@ -1,39 +1,44 @@
 #!/bin/bash
-echo "======================================="
-echo " Top Disk Usage Report"
-echo "======================================="
+
 echo
-echo "Top 10 Directories:"
-du -xhd1 / 2>/dev/null | sort -hr | head -10
+read -rp "Which Directory (/,/home,/var): " TARGET_DIR
+
+if [ ! -d "$TARGET_DIR" ]; then
+    echo "Directory does not exist."
+    exit 1
+fi
+
 echo
-echo "Top 10 Files:"
-find / -xdev -type f -printf '%s %p\n' 2>/dev/null \
-| sort -nr \
-| head -10 \
-| awk '{ printf "%.2f GB\t%s\n", $1/1024/1024/1024, $2 }'
+echo "Top 20 Highest Usage Files in $TARGET_DIR"
+echo "========================================="
+
+find "$TARGET_DIR" -type f -exec du -h {} + 2>/dev/null \
+    | sort -hr \
+    | head -20
+
 echo
-echo "======================================="
-echo " File Deletion"
-echo "======================================="
-echo
-read -rp "Enter full file path to delete (or press Enter to skip): " FILE
+read -rp "Filename for deletion from above: " FILE
+
 if [ -z "$FILE" ]; then
-echo "No file selected."
-exit 0
+    echo "No file specified."
+    exit 0
 fi
+
 if [ ! -f "$FILE" ]; then
-echo "File not found: $FILE"
-exit 1
+    echo "File not found: $FILE"
+    exit 1
 fi
+
+echo
+echo "File Details:"
 ls -lh "$FILE"
+
 echo
 read -rp "Delete this file? (y/n): " CONFIRM
-case "$CONFIRM" in
-y|Y)
-rm -f "$FILE"
-echo "Deleted: $FILE"
-;;
-*)
-echo "Cancelled."
-;;
-esac​‌
+
+if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
+    rm -f "$FILE"
+    echo "Deleted: $FILE"
+else
+    echo "Deletion cancelled."
+fi
